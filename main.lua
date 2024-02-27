@@ -1,3 +1,4 @@
+--functions diagram https://lucid.app/lucidchart/933552db-bb7c-46f5-ba18-aaa16e2f9e44/edit?invitationId=inv_3a6c9d6b-fb14-4e01-8435-cf33c2a56d4d
 coce = io.open("main.floyd11"):read("*a")
 
 function split(inputstr, sep)
