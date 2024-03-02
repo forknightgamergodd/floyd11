@@ -21,23 +21,28 @@ function run(coc, prevariables, sendbackvariables, destroyprevariables)
     local output =''
     
     for i, v in pairs(split(tostring(coc),"\n")) do
-        for ivvvvv, vvvvvvvv in pairs(variables) do
-        end
         line = v
         function replaceVariables(line)
             line = line:gsub("var:(%a+)", function(varname)
                 return variables[varname] or ""
             end)
             
-            line = line:gsub("math:(.-)", function(expression)
-                return load("return " .. expression)() or ""
-            end)
             line = line:gsub("rand:(%d+),(%d+)", function(min, max)
                 return math.random(tonumber(min), tonumber(max)) or ""
             end)
-            
+        
+            line = line:gsub("math:(.-)", function(expr)
+                local func, err = load("return " .. expr)
+                if func then
+                    return func() or ""
+                else
+                    return "Error: " .. err
+                end
+            end)
+        
             return line
         end
+           
         if i == 1 and line == 'i' and definingvariables == false then
             definingvariables = true
         end
@@ -51,7 +56,7 @@ function run(coc, prevariables, sendbackvariables, destroyprevariables)
                     if split(line, ">")[3] == nil then
                         os.execute("start https://www.youtube.com/watch?v=St7ny38gLp4")
                     else
-                        os.execute("start "..split(line, ">")[3])
+                        os.execute("start "..replaceVariables(split(line, ">")[3]))
                     end
                 end
                 if split(line, ">")[2] == "pc" then
@@ -84,7 +89,8 @@ function run(coc, prevariables, sendbackvariables, destroyprevariables)
                     io.write(replaceVariables(gfd))
                     local e = io.read()
                     local nval = e
-                    variables[name] = nval
+                    replaceVariables(nval)
+                    variables[name] = replaceVariables(nval)
                 end
             elseif split(line, ">")[1] == "varchange" then
                 local name = split(line, ">")[2]
@@ -97,14 +103,32 @@ function run(coc, prevariables, sendbackvariables, destroyprevariables)
                 local condition = replaceVariables(split(line, "/.-")[2])
                 local parts = split(line, "/.-")
                 local ifcode = string.gsub(table.concat(parts, " ", 3), "||@", "\n")
-                if load("return " .. condition)() then
-                    print(ifcode)
-                    variables = run( ifcode, variables, true, false)
+                --if (condition) == "true" then
+                --    
+                --end
+                local func, err = load("return " .. condition)
+                if func then
+                    -- If compilation was successful, execute the function
+                    local result = func()
+                    if result == true then
+                        variables = run( ifcode, variables, true, false)
+                    end
                 end
             end
-            
-            
-                
+            if split(line, "/._")[1] == "floydtion" then
+                local name = split(line, "/._")[2]
+                local parts = split(line, "/._")
+                local ifcode = string.gsub(table.concat(parts, " ", 3), "||&", "\n")
+                functions[name] = ifcode
+            end
+            if split(line, ">")[1] == "mindblowtion" then
+                local name = replaceVariables(split(line, ">")[2])
+                local ifcode = string.gsub(functions[name], "||&", "\n")
+                variables = run( ifcode, variables, true, false)
+            end
+            if split(line, ">")[1] == "cantbreathe" then
+                os.exit()
+            end
         elseif definingvariables == true and i ~= 1 then
             if line == 'cant' then
                 definingvariables = false
